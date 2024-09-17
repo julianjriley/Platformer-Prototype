@@ -353,6 +353,7 @@ MonoBehaviour:
   playerSpeed: 8
   playerDashSpeed: 17
   jumpForce: 15
+  groundDetectionLength: 1.05
 --- !u!50 &1665801443
 Rigidbody2D:
   serializedVersion: 4

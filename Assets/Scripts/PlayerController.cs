@@ -22,8 +22,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float jumpForce = 20f;
     float apexJumpPush;
     float coyoteTime = 0.2f;
-    float groundDetectionLength = 1.05f;
+    [SerializeField] float groundDetectionLength = 1.05f;
     bool inCoyoteTime = false;
+    bool coyoteTimeDisabled = false;
     bool completedJump = false;
     bool isGrounded = false;
     bool jumpInputBuffered = false;
@@ -66,7 +67,6 @@ public class PlayerController : MonoBehaviour
     {
         SetHorizontalVelocity();
         CheckGrounded();
-
     }
 
     void SetHorizontalVelocity()
@@ -90,7 +90,6 @@ public class PlayerController : MonoBehaviour
                 JumpFunctionality();
             else if (isGrounded)
             {
-                
                 Debug.Log("GOD HELP ME");
                 JumpFunctionality();
             }
@@ -108,7 +107,7 @@ public class PlayerController : MonoBehaviour
 
     void JumpFunctionality()
     {
-        //isGrounded = false;
+        isGrounded = false;
         if (jumpCounter < 1 && !jumpBuffered)
             return;
         
@@ -122,10 +121,11 @@ public class PlayerController : MonoBehaviour
         {
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
         }
-            
+        coyoteTimeDisabled = true;    
         jumpBuffered = false;
+
         jumpCounter -= 1;
-        Debug.Log(jumpCounter);
+        
     }
 
     void Dash(InputAction.CallbackContext context)
@@ -147,16 +147,27 @@ public class PlayerController : MonoBehaviour
         jumpInputBuffered = true;
     }
 
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawLine(transform.position, transform.position + new Vector3(0, transform.position.y - groundDetectionLength, 0));
+    }
+
     void CheckGrounded()
     {
+        
         RaycastHit2D hit = Physics2D.Raycast(transform.position, -Vector2.up, groundDetectionLength);
 
-        if(hit)
+        if(hit.collider)
         {
+            if(isGrounded)
+                jumpCounter = 2;
             isGrounded = true;
             completedJump = false;
             canDash = true;
-            jumpCounter = 2;
+            coyoteTimeDisabled = false;
+            
+            
             if (jumpBuffered)
             {
                 Debug.Log("DONE");
@@ -167,7 +178,8 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            if(!inCoyoteTime && jumpCounter > 0)
+            isGrounded=false;
+            if(!inCoyoteTime && jumpCounter > 0 && !coyoteTimeDisabled)
             {
                 inCoyoteTime = true;
                 coyoteTimeCoroutine = StartCoroutine("CoyoteTime");
@@ -178,7 +190,6 @@ public class PlayerController : MonoBehaviour
             RaycastHit2D hitBuffer = Physics2D.Raycast(transform.position, -Vector2.up, groundDetectionLength * 1.5f);
             if(hitBuffer)
             {
-                Debug.Log("made it");
                 jumpBuffered = true;
                 jumpInputBuffered = false;
             }
