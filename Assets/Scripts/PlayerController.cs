@@ -30,14 +30,20 @@ public class PlayerController : MonoBehaviour
     bool jumpInputBuffered = false;
     bool jumpBuffered = false;
 
+    //Wall Stuff
+    [SerializeField] float sideDetectionLength;
+    bool canWallJump = false;
+    Vector2 lastWallDir;
+    bool wallJumping = false;
+
     //Dash Stuff
     bool isDashing = false;
     bool canDash = true;
 
     Coroutine coyoteTimeCoroutine;
+    Coroutine wallJumpCoroutine;
 
 
-    bool isTouchingWall = false;
     Vector2 lastMovedVector;
     private void Awake()
     {
@@ -66,12 +72,14 @@ public class PlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         SetHorizontalVelocity();
+        CheckWalls();
         CheckGrounded();
+       
     }
 
     void SetHorizontalVelocity()
     {
-        if (isDashing)
+        if (isDashing || wallJumping)
             return;
         rb.velocity = new Vector2(movement.ReadValue<Vector2>().normalized.x * playerSpeed, rb.velocity.y);
         if(movement.ReadValue<Vector2>() != Vector2.zero )
@@ -84,6 +92,15 @@ public class PlayerController : MonoBehaviour
         {
             if(isDashing) 
                 return;
+            if (!isGrounded && canWallJump)
+            {
+                Debug.Log("wJmp");
+                if(wallJumpCoroutine != null )
+                    StopCoroutine(wallJumpCoroutine);
+                wallJumpCoroutine = StartCoroutine(WallJump());
+                return;
+            }
+
             if (!isGrounded && jumpCounter < 1)
                 CheckJumpBuffer();
             if (jumpCounter >= 1 && !isGrounded)
@@ -130,7 +147,7 @@ public class PlayerController : MonoBehaviour
 
     void Dash(InputAction.CallbackContext context)
     {
-        if(canDash)
+        if(canDash && !wallJumping)
         {
             rb.velocity = new Vector2(rb.velocity.x, 0);
             isDashing = true;
@@ -201,7 +218,37 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    void CheckWalls()
+    {
+        RaycastHit2D leftRay =  Physics2D.BoxCast(transform.position, new Vector2(0.5f,0.5f), 0, Vector2.left, sideDetectionLength);
+        RaycastHit2D rightRay = Physics2D.BoxCast(transform.position, new Vector2(0.5f, 0.5f), 0, -Vector2.left, sideDetectionLength);
+        //RaycastHit2D rightRay = Physics2D.Raycast(transform.position, -Vector2.left, sideDetectionLength);
+        if (leftRay)
+        {
+            Debug.Log("leftWall");
+            canWallJump = true;
+            lastWallDir = -Vector2.left;
+        }
+        else if(rightRay)
+        {
+            Debug.Log("rightWall");
+            canWallJump = true;
+            lastWallDir = -Vector2.right;
+        }
+        else
+        {
+            canWallJump = false;
+        }
+    }
+
     
+    void WallJumpFunctionality()
+    {
+        wallJumping = true;
+        rb.AddForce((lastWallDir + Vector2.up) * 20, ForceMode2D.Impulse);
+
+    }
+
 
     //Coyote Time ;)
     IEnumerator CoyoteTime()
@@ -222,5 +269,16 @@ public class PlayerController : MonoBehaviour
         rb.gravityScale = 5;
 
         isDashing = false;
+    }
+    IEnumerator WallJump()
+    {
+        wallJumping = true;
+        rb.velocity = Vector2.zero;
+        //rb.velocity = new Vector2(rb.velocity.x, 0);
+        rb.AddForce((lastWallDir + Vector2.up * 1.4f) * 15, ForceMode2D.Impulse);
+        jumpCounter = 1;
+        yield return new WaitForSeconds(0.3f);
+        wallJumping = false;
+        canDash = true;
     }
 }
