@@ -20,6 +20,7 @@ public class PlayerController : MonoBehaviour
     //Jump stuff
     int jumpCounter = 2;
     [SerializeField] float jumpForce = 20f;
+    [SerializeField] float wallJumpForce = 10f;
     float apexJumpPush;
     float coyoteTime = 0.2f;
     [SerializeField] float groundDetectionLength = 1.05f;
@@ -39,7 +40,7 @@ public class PlayerController : MonoBehaviour
     //Dash Stuff
     bool isDashing = false;
     bool canDash = true;
-    float dashCooldown = 0.5f;
+    bool dashCooldown;
 
     Coroutine coyoteTimeCoroutine;
     Coroutine wallJumpCoroutine;
@@ -263,13 +264,16 @@ public class PlayerController : MonoBehaviour
     IEnumerator Dash()
     {
         canDash = false;
+        dashCooldown = true;
         rb.gravityScale = 0;
         rb.AddForce(lastMovedVector * playerDashSpeed, ForceMode2D.Impulse);
         yield return new WaitForSeconds(0.15f);
         
         rb.gravityScale = 5;
-
+        
         isDashing = false;
+        //yield return new WaitForSeconds(0.3f);
+        dashCooldown = false;
 
     }
     IEnumerator WallJump()
@@ -277,7 +281,7 @@ public class PlayerController : MonoBehaviour
         wallJumping = true;
         rb.velocity = Vector2.zero;
         //rb.velocity = new Vector2(rb.velocity.x, 0);
-        rb.AddForce((lastWallDir + Vector2.up * 1.4f) * 15, ForceMode2D.Impulse);
+        rb.AddForce((lastWallDir + Vector2.up * 1.4f) * wallJumpForce, ForceMode2D.Impulse);
         jumpCounter = 1;
         yield return new WaitForSeconds(0.3f);
         wallJumping = false;
