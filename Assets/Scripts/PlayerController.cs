@@ -39,6 +39,7 @@ public class PlayerController : MonoBehaviour
     //Dash Stuff
     bool isDashing = false;
     bool canDash = true;
+    float dashCooldown = 0.5f;
 
     Coroutine coyoteTimeCoroutine;
     Coroutine wallJumpCoroutine;
@@ -220,8 +221,8 @@ public class PlayerController : MonoBehaviour
 
     void CheckWalls()
     {
-        RaycastHit2D leftRay =  Physics2D.BoxCast(transform.position, new Vector2(0.5f,0.5f), 0, Vector2.left, sideDetectionLength);
-        RaycastHit2D rightRay = Physics2D.BoxCast(transform.position, new Vector2(0.5f, 0.5f), 0, -Vector2.left, sideDetectionLength);
+        RaycastHit2D leftRay =  Physics2D.BoxCast(transform.position, new Vector2(0.25f,0.25f), 0, Vector2.left, sideDetectionLength);
+        RaycastHit2D rightRay = Physics2D.BoxCast(transform.position, new Vector2(0.25f, 0.25f), 0, -Vector2.left, sideDetectionLength);
         //RaycastHit2D rightRay = Physics2D.Raycast(transform.position, -Vector2.left, sideDetectionLength);
         if (leftRay)
         {
@@ -269,6 +270,7 @@ public class PlayerController : MonoBehaviour
         rb.gravityScale = 5;
 
         isDashing = false;
+
     }
     IEnumerator WallJump()
     {
