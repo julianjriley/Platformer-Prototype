@@ -269,7 +269,7 @@ public class PlayerController : MonoBehaviour
         rb.AddForce(lastMovedVector * playerDashSpeed, ForceMode2D.Impulse);
         yield return new WaitForSeconds(0.15f);
         
-        rb.gravityScale = 5;
+        rb.gravityScale = 3;
         
         isDashing = false;
         //yield return new WaitForSeconds(0.3f);
