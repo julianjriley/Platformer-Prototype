@@ -45,6 +45,8 @@ public class PlayerController : MonoBehaviour
     Coroutine coyoteTimeCoroutine;
     Coroutine wallJumpCoroutine;
 
+    [SerializeField] Transform respawnPoint;
+
 
     Vector2 lastMovedVector;
     private void Awake()
@@ -286,5 +288,10 @@ public class PlayerController : MonoBehaviour
         yield return new WaitForSeconds(0.3f);
         wallJumping = false;
         canDash = true;
+    }
+
+    public void RespawnSomewhereElse()
+    {
+        transform.position = respawnPoint.position;
     }
 }
