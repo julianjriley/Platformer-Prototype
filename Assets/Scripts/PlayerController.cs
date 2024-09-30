@@ -47,6 +47,9 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField] Transform respawnPoint;
 
+    Animator animator;
+    SpriteRenderer spriteRenderer;
+
 
     Vector2 lastMovedVector;
     private void Awake()
@@ -66,6 +69,8 @@ public class PlayerController : MonoBehaviour
         controls.Player.Dash.performed += Dash;
         
         rb = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     private void Update()
@@ -78,7 +83,7 @@ public class PlayerController : MonoBehaviour
         SetHorizontalVelocity();
         CheckWalls();
         CheckGrounded();
-       
+        AnimateCharacter();
     }
 
     void SetHorizontalVelocity()
@@ -88,6 +93,45 @@ public class PlayerController : MonoBehaviour
         rb.velocity = new Vector2(movement.ReadValue<Vector2>().normalized.x * playerSpeed, rb.velocity.y);
         if(movement.ReadValue<Vector2>() != Vector2.zero )
             lastMovedVector = new Vector2(movement.ReadValue<Vector2>().normalized.x, 0);
+    }
+
+    void AnimateCharacter()
+    {
+        if(lastMovedVector.x < 0)
+        {
+            spriteRenderer.flipX = true;
+        }
+        else
+        {
+            spriteRenderer.flipX = false;
+        }
+
+        if(Mathf.Abs(rb.velocity.x) > 0.3f && isGrounded )
+        {
+            animator.SetBool("IsRunning", true);
+        }
+        else
+        {
+            animator.SetBool("IsRunning", false);
+        }
+
+        if(rb.velocity.y > 0.3f && !isGrounded)
+        {
+            animator.SetBool("IsRising", true);
+        }
+        else
+        {
+            animator.SetBool("IsRising", false);
+        }
+
+        if(rb.velocity.y < 0.3f && !isGrounded)
+        {
+            animator.SetBool("IsFalling", true);
+        }
+        else
+        {
+            animator.SetBool("IsFalling", false);
+        }
     }
 
     void Jump(InputAction.CallbackContext context)
@@ -168,12 +212,6 @@ public class PlayerController : MonoBehaviour
         jumpInputBuffered = true;
     }
 
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawLine(transform.position, transform.position + new Vector3(0, transform.position.y - groundDetectionLength, 0));
-    }
-
     void CheckGrounded()
     {
         
@@ -224,24 +262,27 @@ public class PlayerController : MonoBehaviour
 
     void CheckWalls()
     {
-        RaycastHit2D leftRay =  Physics2D.BoxCast(transform.position, new Vector2(0.25f,0.25f), 0, Vector2.left, sideDetectionLength);
-        RaycastHit2D rightRay = Physics2D.BoxCast(transform.position, new Vector2(0.25f, 0.25f), 0, -Vector2.left, sideDetectionLength);
+        RaycastHit2D leftRay =  Physics2D.BoxCast(transform.position, new Vector2(0.75f,0.75f), 0, Vector2.left, sideDetectionLength);
+        RaycastHit2D rightRay = Physics2D.BoxCast(transform.position, new Vector2(0.75f, 0.75f), 0, -Vector2.left, sideDetectionLength);
         //RaycastHit2D rightRay = Physics2D.Raycast(transform.position, -Vector2.left, sideDetectionLength);
         if (leftRay)
         {
             Debug.Log("leftWall");
             canWallJump = true;
             lastWallDir = -Vector2.left;
+            animator.SetBool("IsClinging", true);
         }
         else if(rightRay)
         {
             Debug.Log("rightWall");
             canWallJump = true;
             lastWallDir = -Vector2.right;
+            animator.SetBool("IsClinging", true);
         }
         else
         {
             canWallJump = false;
+            animator.SetBool("IsClinging", false);
         }
     }
 
@@ -269,9 +310,10 @@ public class PlayerController : MonoBehaviour
         dashCooldown = true;
         rb.gravityScale = 0;
         rb.AddForce(lastMovedVector * playerDashSpeed, ForceMode2D.Impulse);
+        animator.SetBool("IsDashing", true);
         yield return new WaitForSeconds(0.15f);
-        
-        rb.gravityScale = 3;
+        animator.SetBool("IsDashing", false);
+        rb.gravityScale = 3.5f;
         
         isDashing = false;
         //yield return new WaitForSeconds(0.3f);
@@ -285,7 +327,9 @@ public class PlayerController : MonoBehaviour
         //rb.velocity = new Vector2(rb.velocity.x, 0);
         rb.AddForce((lastWallDir + Vector2.up * 1.4f) * wallJumpForce, ForceMode2D.Impulse);
         jumpCounter = 1;
+        animator.SetBool("WallJumping", true);
         yield return new WaitForSeconds(0.3f);
+        animator.SetBool("WallJumping", false);
         wallJumping = false;
         canDash = true;
     }
