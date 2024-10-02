@@ -130,7 +130,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerSpeed: 8
   playerDashSpeed: 13
-  jumpForce: 10
+  jumpForce: 13
   wallJumpForce: 8
   groundDetectionLength: 0.85
   sideDetectionLength: 0.4
